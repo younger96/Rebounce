@@ -1,4 +1,4 @@
-package com.example.a47420.rebounce;
+package com.example.a47420.rebounce.vertical;
 
 import android.content.Context;
 import android.support.annotation.Nullable;

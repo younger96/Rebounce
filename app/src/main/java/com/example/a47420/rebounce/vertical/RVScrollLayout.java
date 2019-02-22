@@ -1,4 +1,4 @@
-package com.example.a47420.rebounce;
+package com.example.a47420.rebounce.vertical;
 
 import android.content.Context;
 import android.graphics.PointF;
@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Scroller;
 
+import com.example.a47420.rebounce.Util;
 import com.example.a47420.rebounce.cubic.CubcBezier;
 
 /**
@@ -156,15 +157,15 @@ public class RVScrollLayout extends LinearLayout {
 
 
     //触发顶部/底部自动回弹
-    public void startTBScroll(int leftY){
-        int absY = Math.abs(leftY);
+    public void startTBScroll(int leaveY){
+        int absY = Math.abs(leaveY);
         float x = (float)(absY>MAX_BOUNCE_TOP?MAX_BOUNCE_TOP:absY)/MAX_BOUNCE_TOP;
         int dy = (int) (MAX_BOUNCE_TOP*cubcBezier.getY(x));
 //        dy = dy>80?80:dy;
         Log.i(TAG, "startTBScroll: leftY"+absY);
         Log.i(TAG, "startTBScroll: cb"+cubcBezier.getY(x));
         Log.i(TAG, "startTBScroll: dy"+dy);
-        final int finalDy = leftY > 0 ?dy:-dy;
+        final int finalDy = leaveY > 0 ?dy:-dy;
         mScroller.startScroll(0,0,0,finalDy,400);
         postInvalidate();
         postDelayed(new Runnable() {

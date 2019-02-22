@@ -1,4 +1,4 @@
-package com.example.a47420.rebounce;
+package com.example.a47420.rebounce.vertical;
 
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
