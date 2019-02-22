@@ -81,20 +81,21 @@ public class Util {
             if (manager == null || manager.getItemCount() == 0) {
                 return false;
             }
- 
+
             if (manager instanceof LinearLayoutManager) {
                 // 处理item高度超过一屏幕时的情况
-                View lastVisibleChild = recyclerView.getChildAt(recyclerView.getChildCount() - 1);
-                if (lastVisibleChild != null && lastVisibleChild.getMeasuredHeight() >= recyclerView.getMeasuredHeight()) {
-                    if (android.os.Build.VERSION.SDK_INT < 14) {
-                        return !(ViewCompat.canScrollVertically(recyclerView, 1) || recyclerView.getScrollY() < 0);
-                    } else {
-                        return !ViewCompat.canScrollVertically(recyclerView, 1);
-                    }
+//                View lastVisibleChild = recyclerView.getChildAt(recyclerView.getChildCount() - 1);
+//                if (lastVisibleChild != null && lastVisibleChild.getMeasuredHeight() >= recyclerView.getMeasuredHeight()) {
+//
+//                }
+                if (android.os.Build.VERSION.SDK_INT < 14) {
+                    return !(ViewCompat.canScrollVertically(recyclerView, 1) || recyclerView.getScrollY() < 0);
+                } else {
+                    return !ViewCompat.canScrollVertically(recyclerView, 1);
                 }
             } else if (manager instanceof StaggeredGridLayoutManager) {
                 StaggeredGridLayoutManager layoutManager = (StaggeredGridLayoutManager) manager;
- 
+
                 int[] out = layoutManager.findLastCompletelyVisibleItemPositions(null);
                 int lastPosition = layoutManager.getItemCount() - 1;
                 for (int position : out) {
