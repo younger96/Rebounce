@@ -18,6 +18,8 @@ import com.example.a47420.rebounce.cubic.CubcBezier;
  */
 public class RVScrollLayout extends LinearLayout {
     private static final String TAG = "RVScrollLayout";
+    private static final int MAX_BOUNCE_TOP = 120;//最大的弹出距离
+
 
 //    private boolean isGetDown;//在down和顶部同时触发时,优先选择手指
 //    private int upLength = 0;//在上滑到顶时剩余的高度
@@ -63,7 +65,7 @@ public class RVScrollLayout extends LinearLayout {
  
     public RVScrollLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
-        cubcBezier = new CubcBezier(new PointF(0.08f,0.48f),new PointF(0.33f,1f));
+        cubcBezier = new CubcBezier(new PointF(0f,0.71f),new PointF(0.14f,0.67f));
     }
  
     public RVScrollLayout(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -155,8 +157,13 @@ public class RVScrollLayout extends LinearLayout {
 
     //触发顶部/底部自动回弹
     public void startTBScroll(int leftY){
-        int dy = Math.abs(leftY)*8;
-        dy = dy>80?80:dy;
+        int absY = Math.abs(leftY);
+        float x = (float)(absY>MAX_BOUNCE_TOP?MAX_BOUNCE_TOP:absY)/MAX_BOUNCE_TOP;
+        int dy = (int) (MAX_BOUNCE_TOP*cubcBezier.getY(x));
+//        dy = dy>80?80:dy;
+        Log.i(TAG, "startTBScroll: leftY"+absY);
+        Log.i(TAG, "startTBScroll: cb"+cubcBezier.getY(x));
+        Log.i(TAG, "startTBScroll: dy"+dy);
         final int finalDy = leftY > 0 ?dy:-dy;
         mScroller.startScroll(0,0,0,finalDy,400);
         postInvalidate();

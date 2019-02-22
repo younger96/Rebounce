@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initData() {
         data = new ArrayList<String>();
-        for (int i = 0; i <200; i++) {
+        for (int i = 0; i <150; i++) {
             data.add("测试"+i);
         }
     }
