@@ -23,7 +23,7 @@ import com.example.a47420.rebounce.cubic.RecorInterpolator;
 public class HoriScrollLayout extends LinearLayout {
     private static final String TAG = "RVScrollLayout";
     private static final int MAX_BOUNCE_TOP = 120;//最大的弹出距离
-
+    private static final int MAX_DRAG_TOP = MAX_BOUNCE_TOP*5;//最大的拉出距离
 
 //    private boolean isGetDown;//在down和顶部同时触发时,优先选择手指
 //    private int upLength = 0;//在上滑到顶时剩余的高度
@@ -101,7 +101,12 @@ public class HoriScrollLayout extends LinearLayout {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev.getAction() == MotionEvent.ACTION_MOVE && disAllow){
+        if (ev.getAction() == MotionEvent.ACTION_DOWN){
+            Log.i(TAG, "dispatchTouchEvent: down");
+            if (animatorStart != null){
+                animatorStart.cancel();
+            }
+        }else if (ev.getAction() == MotionEvent.ACTION_MOVE && disAllow){
             Log.i(TAG, "dispatchTouchEvent: disallow");
             disAllow =false;
             requestDisallowInterceptTouchEvent(true);
@@ -127,20 +132,18 @@ public class HoriScrollLayout extends LinearLayout {
 
                 if (MY_SCROLL_TYPE == MyScrollType.LEFT){
                     if (mLastX - x < 0 ){
-                        int scrollLength = Math.abs(mLastX - x) >800?800:Math.abs(mLastX -x);
-                        scrollTo((int) (-scrollLength * 0.4),0);
+                        int scrollLength = Math.abs(mLastX - x) >MAX_DRAG_TOP?MAX_DRAG_TOP:Math.abs(mLastX -x);
+                        scrollTo((int) (-scrollLength*0.4+savePreX),0);
                     }else {
-                        Log.i(TAG, "onTouchEvent: MOVE disallow");
-                       disAllow =true;
+                        disAllow =true;
                         scrollTo(0,0);
                     }
                 }else {
                     if (mLastX - x > 0){
-                        int scrollLength = Math.abs(mLastX - x) >800?800:Math.abs(mLastX -x);
-                        scrollTo((int) (scrollLength * 0.4),0);
+                        int scrollLength = Math.abs(mLastX - x) >MAX_DRAG_TOP?MAX_DRAG_TOP:Math.abs(mLastX -x);
+                        scrollTo((int) (scrollLength*0.4+savePreX),0);
                     }else {
-                        Log.i(TAG, "onTouchEvent: MOVE disallow");
-                    disAllow =true;
+                        disAllow =true;
                         scrollTo(0,0);
                     }
                 }
@@ -167,22 +170,15 @@ public class HoriScrollLayout extends LinearLayout {
         Log.i(TAG, "startTBScroll: cb"+cubcBezier.getY(y));
         Log.i(TAG, "startTBScroll: dy"+dx);
         final int finalDy = leaveX > 0 ?dx:-dx;
-//        mScroller.startScroll(0,0,finalDy,0,400);
-//        postInvalidate();
-//        postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                mScroller.startScroll(finalDy,0,-finalDy, 0,400);
-//                postInvalidate();
-//            }
-//        },400);
-
         checkStartAni(finalDy);
     }
 
     private int preX;
+    private int savePreX;//用于存储preX的值
+    private ValueAnimator animatorStart;
+    private boolean isCancel;
     private void checkStartAni(final int finalDy) {
-        ValueAnimator animatorStart = ValueAnimator.ofFloat(0,1,0);
+        animatorStart = ValueAnimator.ofFloat(0,1,0);
         animatorStart.setDuration(600);
         animatorStart.setInterpolator(new RecorInterpolator(0.29f,0.8f,0.64f,0.19f));
         animatorStart.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -198,18 +194,26 @@ public class HoriScrollLayout extends LinearLayout {
         animatorStart.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
+                isCancel =false;
                 preX = 0;
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                preX = 0;
-                mScroller.startScroll(0,0,0, 0);
+                Log.i(TAG, "onAnimationEnd: ");
+                if (!isCancel){
+                    preX = 0;
+                    mScroller.startScroll(0,0,0, 0);
+                    postInvalidate();
+                }
             }
 
             @Override
             public void onAnimationCancel(Animator animation) {
-
+                Log.i(TAG, "onAnimationCancel: "+preX);
+                isCancel = true;
+                mScroller.startScroll(preX,0,0,0);
+                postInvalidate();
             }
 
             @Override
@@ -227,10 +231,11 @@ public class HoriScrollLayout extends LinearLayout {
         Log.i(TAG, "相对于组件滑过的距离==getY()：" + x);
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                savePreX = preX;
                 mLastX = x;
+                preX = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.i(TAG, "onInterceptTouchEvent: "+(x- mLastX));
                 /**
                  * 下面两个判断来自于 BGARefreshLayout 框架中的判断，github 上搜索 BGARefreshLayout
                  */
