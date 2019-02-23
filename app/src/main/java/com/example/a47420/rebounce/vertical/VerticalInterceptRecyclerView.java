@@ -37,17 +37,11 @@ public class VerticalInterceptRecyclerView extends RecyclerView {
                 if (canScrollVertically(-1) || canScrollVertically(1)) {
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
-                downX = ev.getX();
-                downY = ev.getY();
             case MotionEvent.ACTION_MOVE:
                 if (!canScrollVertically(-1) || !canScrollVertically(1)) {
                     Log.i(TAG, "dispatchTouchEvent: move false");
                     getParent().requestDisallowInterceptTouchEvent(false);
-                }
-//                else  if (isHorizontalMoved(ev.getX() - downX, ev.getY() - downY)) {
-//                    getParent().requestDisallowInterceptTouchEvent(false);
-//                }
-                else {
+                } else {
                     Log.i(TAG, "dispatchTouchEvent: move true");
                     getParent().requestDisallowInterceptTouchEvent(true);
                 }
@@ -61,10 +55,5 @@ public class VerticalInterceptRecyclerView extends RecyclerView {
                 break;
         }
         return super.dispatchTouchEvent(ev);
-    }
-
-    private boolean isHorizontalMoved(float offsetX, float offsetY) {
-        int touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
-        return Math.abs(offsetY) < touchSlop * 5 && Math.abs(offsetX) > touchSlop * 8;
     }
 }

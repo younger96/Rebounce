@@ -7,7 +7,7 @@
     <com.example.a47420.rebounce.horizol.HoriScrollLayout
         android:id="@+id/rv_scroll"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="300dp"
         android:background="@android:color/darker_gray"
         >
 

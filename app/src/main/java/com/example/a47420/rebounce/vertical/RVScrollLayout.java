@@ -23,15 +23,11 @@ import com.example.a47420.rebounce.cubic.RecorInterpolator;
 public class RVScrollLayout extends LinearLayout {
     private static final String TAG = "RVScrollLayout";
     private static final int MAX_BOUNCE_TOP = 120;//最大的弹出距离
+    private static final int MAX_DRAG_TOP = MAX_BOUNCE_TOP*5;//最大的拉出距离
 
-
-//    private boolean isGetDown;//在down和顶部同时触发时,优先选择手指
-//    private int upLength = 0;//在上滑到顶时剩余的高度
     private int MY_SCROLL_TYPE = 0;
 
     private CubicBezier cubcBezier;
-
-    private ValueAnimator animatorStart , animatorStop;
 
     private interface MyScrollType{
         int TOP = 0;
@@ -71,13 +67,12 @@ public class RVScrollLayout extends LinearLayout {
  
     public RVScrollLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
-        cubcBezier = new CubicBezier(new PointF(0f,0.71f),new PointF(0.14f,0.67f));
     }
  
     public RVScrollLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        cubcBezier = new CubicBezier(new PointF(0.16f,0.68f),new PointF(0.16f,0.79f));
         mScroller = new Scroller(context);
- 
     }
  
     @Override
@@ -103,7 +98,12 @@ public class RVScrollLayout extends LinearLayout {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev.getAction() == MotionEvent.ACTION_MOVE && disAllow){
+        if (ev.getAction() == MotionEvent.ACTION_DOWN){
+            Log.i(TAG, "dispatchTouchEvent: down");
+            if (animatorStart != null){
+                animatorStart.cancel();
+            }
+        }else if (ev.getAction() == MotionEvent.ACTION_MOVE && disAllow){
             Log.i(TAG, "dispatchTouchEvent: disallow");
             disAllow =false;
             requestDisallowInterceptTouchEvent(true);
@@ -119,7 +119,7 @@ public class RVScrollLayout extends LinearLayout {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
 //                Log.i(TAG, "onTouchEvent: DOWN");
-                mStart = getScrollY();
+                mStart = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
                 Log.i(TAG, "onTouchEvent: MOVE  "+ " "+(mLastY - y));
@@ -129,27 +129,26 @@ public class RVScrollLayout extends LinearLayout {
 
                 if (MY_SCROLL_TYPE == MyScrollType.TOP){
                     if (mLastY - y < 0 ){
-                        int scrollLength = Math.abs(mLastY - y) >800?800:Math.abs(mLastY-y);
-                        scrollTo(0, (int) (-scrollLength * 0.4));
+                        int scrollLength = Math.abs(mLastY - y) >MAX_DRAG_TOP?MAX_DRAG_TOP:Math.abs(mLastY-y);
+                        scrollTo(0, (int) (-scrollLength * 0.4 + savePreY));
                     }else {
                         Log.i(TAG, "onTouchEvent: MOVE disallow");
                        disAllow =true;
                         scrollTo(0,0);
-//                    requestDisallowInterceptTouchEvent(true);
                     }
                 }else {
                     if (mLastY - y > 0){
                         int scrollLength = Math.abs(mLastY - y) >800?800:Math.abs(mLastY-y);
-                        scrollTo(0, (int) (scrollLength * 0.4));
+                        scrollTo(0, (int) (scrollLength * 0.4+savePreY));
                     }else {
                         Log.i(TAG, "onTouchEvent: MOVE disallow");
                     disAllow =true;
                         scrollTo(0,0);
-//                    requestDisallowInterceptTouchEvent(true);
                     }
                 }
                 break;
             case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
                 Log.i(TAG, "onTouchEvent: UP");
                 mEnd = getScrollY();
                 int dScrollY = mEnd - mStart;
@@ -166,21 +165,58 @@ public class RVScrollLayout extends LinearLayout {
         int absY = Math.abs(leaveY);
         float x = (float)(absY>MAX_BOUNCE_TOP?MAX_BOUNCE_TOP:absY)/MAX_BOUNCE_TOP;
         int dy = (int) (MAX_BOUNCE_TOP*cubcBezier.getY(x));
-//        dy = dy>80?80:dy;
-        Log.i(TAG, "startTBScroll: leftY"+absY);
-        Log.i(TAG, "startTBScroll: cb"+cubcBezier.getY(x));
-        Log.i(TAG, "startTBScroll: dy"+dy);
         final int finalDy = leaveY > 0 ?dy:-dy;
-        mScroller.startScroll(0,0,0,finalDy,400);
-        postInvalidate();
-        postDelayed(new Runnable() {
+        checkStartAni(finalDy);
+    }
+
+    private int preY;
+    private int savePreY;//用于存储preX的值
+    private ValueAnimator animatorStart;
+    private boolean isCancel;
+    private void checkStartAni(final int finalDy) {
+        animatorStart = ValueAnimator.ofFloat(0,1,0);
+        animatorStart.setDuration(600);
+        animatorStart.setInterpolator(new RecorInterpolator(0.29f,0.8f,0.64f,0.19f));
+        animatorStart.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void run() {
-                mScroller.startScroll(0,finalDy,0, -finalDy,400);
+            public void onAnimationUpdate(ValueAnimator animation) {
+                Log.i(TAG, "onAnimationUpdate: "+animation.getAnimatedValue());
+                int value = (int)(finalDy*(float)animation.getAnimatedValue());
+                mScroller.startScroll(0,preY,0, -value);
+                preY = value;
                 postInvalidate();
             }
-        },400);
+        });
+        animatorStart.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                isCancel =false;
+                preY = 0;
+            }
 
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                Log.i(TAG, "onAnimationEnd: ");
+                if (!isCancel){
+                    preY = 0;
+                    mScroller.startScroll(0,0,0, 0);
+                    postInvalidate();
+                }
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                Log.i(TAG, "onAnimationCancel: "+ preY);
+                isCancel = true;
+                mScroller.startScroll(0,preY,0,0);
+                postInvalidate();
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
         animatorStart.start();
     }
 
@@ -191,7 +227,9 @@ public class RVScrollLayout extends LinearLayout {
         Log.i(TAG, "相对于组件滑过的距离==getY()：" + y);
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mLastY = 0;
+                savePreY = preY;
+                mLastY = y;
+                preY = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
                 Log.i(TAG, "onInterceptTouchEvent: "+(y-mLastY));

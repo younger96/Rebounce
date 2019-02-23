@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         rvScrollLayout = findViewById(R.id.rv_scroll);
-        interceptRecyclerView = (VerticalInterceptRecyclerView) findViewById(R.id.rv_custom_list);
+        interceptRecyclerView =  findViewById(R.id.rv_custom_list);
         interceptRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new RVAdapter();
         interceptRecyclerView.setAdapter(adapter);

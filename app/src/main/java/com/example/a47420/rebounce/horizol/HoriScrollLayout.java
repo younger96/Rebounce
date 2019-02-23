@@ -21,12 +21,10 @@ import com.example.a47420.rebounce.cubic.RecorInterpolator;
  * 自定义可滚动组件的弹性容器，仿IOS回弹效果
  */
 public class HoriScrollLayout extends LinearLayout {
-    private static final String TAG = "RVScrollLayout";
+    private static final String TAG = "HoriScrollLayout";
     private static final int MAX_BOUNCE_TOP = 120;//最大的弹出距离
     private static final int MAX_DRAG_TOP = MAX_BOUNCE_TOP*5;//最大的拉出距离
 
-//    private boolean isGetDown;//在down和顶部同时触发时,优先选择手指
-//    private int upLength = 0;//在上滑到顶时剩余的高度
     private int MY_SCROLL_TYPE = 0;
 
     private CubicBezier cubcBezier;
@@ -69,13 +67,12 @@ public class HoriScrollLayout extends LinearLayout {
  
     public HoriScrollLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
-        cubcBezier = new CubicBezier(new PointF(0.16f,0.68f),new PointF(0.16f,0.79f));
     }
  
     public HoriScrollLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        cubcBezier = new CubicBezier(new PointF(0.16f,0.68f),new PointF(0.16f,0.79f));
         mScroller = new Scroller(context);
-//        this.setOrientation(HORIZONTAL);
     }
  
     @Override
@@ -149,6 +146,7 @@ public class HoriScrollLayout extends LinearLayout {
                 }
                 break;
             case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
                 Log.i(TAG, "onTouchEvent: UP");
                 mEnd = getScrollX();
                 int dScrollX = mEnd - mStart;
@@ -165,10 +163,6 @@ public class HoriScrollLayout extends LinearLayout {
         int absX = Math.abs(leaveX);
         float y = (float)(absX>MAX_BOUNCE_TOP?MAX_BOUNCE_TOP:absX)/MAX_BOUNCE_TOP;
         int dx = (int) (MAX_BOUNCE_TOP*cubcBezier.getY(y));
-//        dy = dy>80?80:dy;
-        Log.i(TAG, "startTBScroll: leftY"+absX);
-        Log.i(TAG, "startTBScroll: cb"+cubcBezier.getY(y));
-        Log.i(TAG, "startTBScroll: dy"+dx);
         final int finalDy = leaveX > 0 ?dx:-dx;
         checkStartAni(finalDy);
     }
