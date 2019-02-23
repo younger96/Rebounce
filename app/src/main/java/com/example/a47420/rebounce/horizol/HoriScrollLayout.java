@@ -1,5 +1,7 @@
 package com.example.a47420.rebounce.horizol;
 
+import android.animation.Animator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.PointF;
 import android.support.v7.widget.RecyclerView;
@@ -11,7 +13,8 @@ import android.widget.LinearLayout;
 import android.widget.Scroller;
 
 import com.example.a47420.rebounce.Util;
-import com.example.a47420.rebounce.cubic.CubcBezier;
+import com.example.a47420.rebounce.cubic.CubicBezier;
+import com.example.a47420.rebounce.cubic.RecorInterpolator;
 
 /**
  * Created by Sick on 2016/8/8.
@@ -26,7 +29,7 @@ public class HoriScrollLayout extends LinearLayout {
 //    private int upLength = 0;//在上滑到顶时剩余的高度
     private int MY_SCROLL_TYPE = 0;
 
-    private CubcBezier cubcBezier;
+    private CubicBezier cubcBezier;
 
     private interface MyScrollType{
         int LEFT = 0;
@@ -66,7 +69,7 @@ public class HoriScrollLayout extends LinearLayout {
  
     public HoriScrollLayout(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
-        cubcBezier = new CubcBezier(new PointF(0.16f,0.68f),new PointF(0.16f,0.79f));
+        cubcBezier = new CubicBezier(new PointF(0.16f,0.68f),new PointF(0.16f,0.79f));
     }
  
     public HoriScrollLayout(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -164,18 +167,60 @@ public class HoriScrollLayout extends LinearLayout {
         Log.i(TAG, "startTBScroll: cb"+cubcBezier.getY(y));
         Log.i(TAG, "startTBScroll: dy"+dx);
         final int finalDy = leaveX > 0 ?dx:-dx;
-        mScroller.startScroll(0,0,finalDy,0,400);
-        postInvalidate();
-        postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mScroller.startScroll(finalDy,0,-finalDy, 0,400);
-                postInvalidate();
-            }
-        },400);
+//        mScroller.startScroll(0,0,finalDy,0,400);
+//        postInvalidate();
+//        postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                mScroller.startScroll(finalDy,0,-finalDy, 0,400);
+//                postInvalidate();
+//            }
+//        },400);
+
+        checkStartAni(finalDy);
     }
 
- 
+    private int preX;
+    private void checkStartAni(final int finalDy) {
+        ValueAnimator animatorStart = ValueAnimator.ofFloat(0,1,0);
+        animatorStart.setDuration(600);
+        animatorStart.setInterpolator(new RecorInterpolator(0.29f,0.8f,0.64f,0.19f));
+        animatorStart.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                Log.i(TAG, "onAnimationUpdate: "+animation.getAnimatedValue());
+                int value = (int)(finalDy*(float)animation.getAnimatedValue());
+                mScroller.startScroll(preX,0,-value, 0);
+                preX = value;
+                postInvalidate();
+            }
+        });
+        animatorStart.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                preX = 0;
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                preX = 0;
+                mScroller.startScroll(0,0,0, 0);
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        animatorStart.start();
+    }
+
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         int x = (int) ev.getX();

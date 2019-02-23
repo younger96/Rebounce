@@ -8,15 +8,15 @@ import android.util.Log;
  * from 陈秋阳
  * 功能描述：贝塞尔曲线三阶函数
  */
-public class CubcBezier {
-    private static final String TAG = "CubcBezier";
+public class CubicBezier {
+    private static final String TAG = "CubicBezier";
 
     PointF p1;
     PointF p2;
     private PointF[] coords;
     int precision = 1000;
 
-    public CubcBezier(PointF p1, PointF p2) {
+    public CubicBezier(PointF p1, PointF p2) {
         this.p1 = p1;
         this.p2 = p2;
         this.coords = this.getCoordsArray(precision);

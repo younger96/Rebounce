@@ -12,17 +12,15 @@ import android.view.animation.Interpolator;
 public class RecorInterpolator implements Interpolator {
     PointF p1;
     PointF p2;
-    CubcBezier cubcBezier;
-    public RecorInterpolator(PointF p1, PointF p2) {
-        this.p1 = p1;
-        this.p2 = p2;
-        cubcBezier = new CubcBezier(p1,p2);
+    CubicBezier cubcBezier;
+    public RecorInterpolator(float x1,float y1,float x2,float y2) {
+        this.p1 = new PointF(x1,y1);
+        this.p2 = new PointF(x2,y2);
+        cubcBezier = new CubicBezier(p1,p2);
     }
-
-
 
     @Override
     public float getInterpolation(float input) {
-        return 0;
+        return cubcBezier.getY(input);
     }
 }
