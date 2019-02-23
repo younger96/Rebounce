@@ -113,7 +113,8 @@ public class HoriScrollLayout extends LinearLayout {
         int x = (int) event.getX();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mStart = getScrollX();
+                Log.i(TAG, "onTouchEvent: DOWN");
+                mStart = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
                 Log.i(TAG, "onTouchEvent: MOVE  "+ " "+(mLastX - x));
