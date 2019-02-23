@@ -176,7 +176,7 @@ public class RVScrollLayout extends LinearLayout {
     private void checkStartAni(final int finalDy) {
         animatorStart = ValueAnimator.ofFloat(0,1,0);
         animatorStart.setDuration(600);
-        animatorStart.setInterpolator(new RecorInterpolator(0.29f,0.8f,0.64f,0.19f));
+        animatorStart.setInterpolator(new RecorInterpolator(0.3f,0.82f,0.7f,0.18f));
         animatorStart.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -224,7 +224,7 @@ public class RVScrollLayout extends LinearLayout {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         int y = (int) ev.getY();
-        Log.i(TAG, "相对于组件滑过的距离==getY()：" + y);
+        Log.i(TAG, "相对于组件滑过的距离==getY()：" + ev.getAction());
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 savePreY = preY;
