@@ -184,7 +184,7 @@ public class RVScrollLayout extends LinearLayout {
         Log.i(TAG, "相对于组件滑过的距离==getY()：" + y);
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                mLastY = y;
+                mLastY = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
                 Log.i(TAG, "onInterceptTouchEvent: "+(y-mLastY));
