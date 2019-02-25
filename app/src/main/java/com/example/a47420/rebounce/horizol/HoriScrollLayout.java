@@ -72,7 +72,7 @@ public class HoriScrollLayout extends LinearLayout {
  
     public HoriScrollLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        cubcBezier = new CubicBezier(new PointF(0.16f,0.68f),new PointF(0.16f,0.79f));
+        cubcBezier = new CubicBezier(new PointF(0.02f,0.4f),new PointF(0.27f,0.61f));
         mScroller = new Scroller(context);
     }
  
@@ -160,8 +160,8 @@ public class HoriScrollLayout extends LinearLayout {
     //触发顶部/底部自动回弹
     public void startTBScroll(int leaveX){
         int absX = Math.abs(leaveX);
-        float y = (float)(absX>MAX_BOUNCE_TOP?MAX_BOUNCE_TOP:absX)/MAX_BOUNCE_TOP;
-        int dx = (int) (MAX_BOUNCE_TOP*cubcBezier.getY(y));
+        float percent = (float)(absX>MAX_BOUNCE_TOP?MAX_BOUNCE_TOP:absX)/MAX_BOUNCE_TOP;
+        int dx = (int) (MAX_BOUNCE_TOP*cubcBezier.getY(percent));
         final int finalDy = leaveX > 0 ?dx:-dx;
         checkStartAni(finalDy);
     }
@@ -173,7 +173,8 @@ public class HoriScrollLayout extends LinearLayout {
     private void checkStartAni(final int finalDy) {
         animatorStart = ValueAnimator.ofFloat(0,1,0);
         animatorStart.setDuration(600);
-        animatorStart.setInterpolator(new RecorInterpolator(0.29f,0.8f,0.64f,0.19f));
+//        animatorStart.setInterpolator(new RecorInterpolator(0.13f,0.45f,0f,0.94f));
+        animatorStart.setInterpolator(new RecorInterpolator(0.13f,0.45f,0.41f,0.78f));
         animatorStart.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
