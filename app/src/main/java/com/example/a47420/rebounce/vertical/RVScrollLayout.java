@@ -32,6 +32,7 @@ public class RVScrollLayout extends LinearLayout {
     private interface MyScrollType{
         int TOP = 0;
         int BUTTOM =1;
+        int NORMAL = 2;
     }
 
     /**
@@ -53,7 +54,7 @@ public class RVScrollLayout extends LinearLayout {
     /**
      * 上一次滑动的坐标
      */
-    private int mLastY;
+    private int mPreY;
     /**
      * 滚动辅助类
      */
@@ -118,31 +119,26 @@ public class RVScrollLayout extends LinearLayout {
         int y = (int) event.getY();
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-//                Log.i(TAG, "onTouchEvent: DOWN");
                 mStart = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.i(TAG, "onTouchEvent: MOVE  "+ " "+(mLastY - y));
+                Log.i(TAG, "onTouchEvent: MOVE  "+ " "+(mPreY - y - savePreY)+"   "+savePreY);
                 if (!mScroller.isFinished()) {
                     mScroller.abortAnimation();  //终止动画
                 }
 
                 if (MY_SCROLL_TYPE == MyScrollType.TOP){
-                    if (mLastY - y < 0 ){
-                        int scrollLength = Math.abs(mLastY - y) >MAX_DRAG_TOP?MAX_DRAG_TOP:Math.abs(mLastY-y);
-                        scrollTo(0, (int) (-scrollLength * 0.4 + savePreY));
+                    if ((int) ((mPreY-y)*0.4 + savePreY) < 0 ){
+                        scrollTo(0, (int) ((mPreY-y)*0.4 + savePreY));
                     }else {
-                        Log.i(TAG, "onTouchEvent: MOVE disallow");
-                       disAllow =true;
+                        disAllow =true;
                         scrollTo(0,0);
                     }
-                }else {
-                    if (mLastY - y > 0){
-                        int scrollLength = Math.abs(mLastY - y) >800?800:Math.abs(mLastY-y);
-                        scrollTo(0, (int) (scrollLength * 0.4+savePreY));
+                }else if (MY_SCROLL_TYPE == MyScrollType.BUTTOM){
+                    if ((int) ((mPreY-y)*0.4 + savePreY) > 0){
+                        scrollTo(0, (int) ((mPreY-y)*0.4 + savePreY));
                     }else {
-                        Log.i(TAG, "onTouchEvent: MOVE disallow");
-                    disAllow =true;
+                        disAllow =true;
                         scrollTo(0,0);
                     }
                 }
@@ -169,7 +165,7 @@ public class RVScrollLayout extends LinearLayout {
         checkStartAni(finalDy);
     }
 
-    private int preY;
+    private int preY;//动画运行到一半被暂停的时候离 顶部/底部 的边距
     private int savePreY;//用于存储preX的值
     private ValueAnimator animatorStart;
     private boolean isCancel;
@@ -180,7 +176,6 @@ public class RVScrollLayout extends LinearLayout {
         animatorStart.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                Log.i(TAG, "onAnimationUpdate: "+animation.getAnimatedValue());
                 int value = (int)(finalDy*(float)animation.getAnimatedValue());
                 mScroller.startScroll(0,preY,0, -value);
                 preY = value;
@@ -196,7 +191,6 @@ public class RVScrollLayout extends LinearLayout {
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                Log.i(TAG, "onAnimationEnd: ");
                 if (!isCancel){
                     preY = 0;
                     mScroller.startScroll(0,0,0, 0);
@@ -228,25 +222,23 @@ public class RVScrollLayout extends LinearLayout {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 savePreY = preY;
-                mLastY = y;
+                mPreY = y;
                 preY = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.i(TAG, "onInterceptTouchEvent: "+(y-mLastY));
-                /**
-                 * 下面两个判断来自于 BGARefreshLayout 框架中的判断，github 上搜索 BGARefreshLayout
-                 */
+                Log.i(TAG, "onInterceptTouchEvent: "+"y:"+y+" mPreY:"+ mPreY +"  savePreY:"+savePreY+" "+"    y-mPreY+savePreY:"+(y- mPreY -savePreY));
+                // BGARefreshLayout
                 if (convertView instanceof RecyclerView) {
-                    Log.i(TAG, "onInterceptTouchEvent: ");
-                    if (y - mLastY > 0) {
+                    if ((mPreY - y + savePreY) < 0) {
                         if (Util.isRecyclerViewToTop(recyclerView)) {
+                            Log.i(TAG, "onInterceptTouchEvent: top");
                             MY_SCROLL_TYPE = MyScrollType.TOP;
                             Log.i(TAG, "滑倒顶部时事件拦截成功");
                             return true;
                         }
                     }
 
-                    if (y - mLastY < 0) {
+                    if ((mPreY - y + savePreY) > 0) {
                         Log.i(TAG, "onInterceptTouchEvent: bottom");
                         if (Util.isRecyclerViewToBottom(recyclerView)) {
                             MY_SCROLL_TYPE = MyScrollType.BUTTOM;
@@ -254,6 +246,7 @@ public class RVScrollLayout extends LinearLayout {
                             return true;
                         }
                     }
+                    MY_SCROLL_TYPE = MyScrollType.NORMAL;
                 }
                 break;
         }
@@ -265,7 +258,6 @@ public class RVScrollLayout extends LinearLayout {
     public void computeScroll() {
         super.computeScroll();
         if (mScroller.computeScrollOffset()) {
-//            Log.i(TAG, "computeScroll: "+mScroller.getCurrY());
             scrollTo(0, mScroller.getCurrY());
             postInvalidate();
         }
