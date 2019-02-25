@@ -32,6 +32,7 @@ public class HoriScrollLayout extends LinearLayout {
     private interface MyScrollType{
         int LEFT = 0;
         int RIGHT =1;
+        int NORMAL = 2;
     }
 
     /**
@@ -53,7 +54,7 @@ public class HoriScrollLayout extends LinearLayout {
     /**
      * 上一次滑动的坐标
      */
-    private int mLastX;
+    private int mPreX;
     /**
      * 滚动辅助类
      */
@@ -122,23 +123,21 @@ public class HoriScrollLayout extends LinearLayout {
                 mStart = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
-                Log.i(TAG, "onTouchEvent: MOVE  "+ " "+(mLastX - x));
+                Log.i(TAG, "onTouchEvent: MOVE  "+ " "+(mPreX - x));
                 if (!mScroller.isFinished()) {
                     mScroller.abortAnimation();  //终止动画
                 }
 
                 if (MY_SCROLL_TYPE == MyScrollType.LEFT){
-                    if (mLastX - x < 0 ){
-                        int scrollLength = Math.abs(mLastX - x) >MAX_DRAG_TOP?MAX_DRAG_TOP:Math.abs(mLastX -x);
-                        scrollTo((int) (-scrollLength*0.4+savePreX),0);
+                    if ((int) ((mPreX-x)*0.4 + savePreX) < 0 ){
+                        scrollTo((int) ((mPreX-x)*0.4 + savePreX),0);
                     }else {
                         disAllow =true;
                         scrollTo(0,0);
                     }
                 }else {
-                    if (mLastX - x > 0){
-                        int scrollLength = Math.abs(mLastX - x) >MAX_DRAG_TOP?MAX_DRAG_TOP:Math.abs(mLastX -x);
-                        scrollTo((int) (scrollLength*0.4+savePreX),0);
+                    if ((int) ((mPreX-x)*0.4 + savePreX) > 0){
+                        scrollTo((int) ((mPreX-x)*0.4 + savePreX),0);
                     }else {
                         disAllow =true;
                         scrollTo(0,0);
@@ -226,7 +225,7 @@ public class HoriScrollLayout extends LinearLayout {
         switch (ev.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 savePreX = preX;
-                mLastX = x;
+                mPreX = x;
                 preX = 0;
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -235,7 +234,7 @@ public class HoriScrollLayout extends LinearLayout {
                  */
                 if (convertView instanceof RecyclerView) {
                     Log.i(TAG, "onInterceptTouchEvent: ");
-                    if (x - mLastX > 0) {
+                    if (mPreX-x+savePreX < 0) {
                         if (Util.isRecyclerViewToLeft(recyclerView)) {
                             MY_SCROLL_TYPE = MyScrollType.LEFT;
                             Log.i(TAG, "滑倒左边时事件拦截成功");
@@ -243,7 +242,7 @@ public class HoriScrollLayout extends LinearLayout {
                         }
                     }
 
-                    if (x - mLastX < 0) {
+                    if (mPreX-x+savePreX > 0) {
                         Log.i(TAG, "onInterceptTouchEvent: bottom");
                         if (Util.isRecyclerViewToRight(recyclerView)) {
                             MY_SCROLL_TYPE = MyScrollType.RIGHT;
@@ -251,6 +250,7 @@ public class HoriScrollLayout extends LinearLayout {
                             return true;
                         }
                     }
+                    MY_SCROLL_TYPE = MyScrollType.NORMAL;
                 }
                 break;
         }
@@ -262,7 +262,6 @@ public class HoriScrollLayout extends LinearLayout {
     public void computeScroll() {
         super.computeScroll();
         if (mScroller.computeScrollOffset()) {
-//            Log.i(TAG, "computeScroll: "+mScroller.getCurrY());
             scrollTo(mScroller.getCurrX(),0);
             postInvalidate();
         }
